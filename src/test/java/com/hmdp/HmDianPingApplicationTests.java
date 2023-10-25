@@ -6,9 +6,13 @@ import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RedisIdWorker;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.geo.Point;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,6 +28,9 @@ class  HmDianPingApplicationTests {
 
     @Resource
     private RedisIdWorker redisIdWorker;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     private ExecutorService es = Executors.newFixedThreadPool(500);
 
@@ -52,5 +59,15 @@ class  HmDianPingApplicationTests {
         cacheClient.setWithLogicalExpire(RedisConstants.CACHE_SHOP_KEY + 1, shop, 10L, TimeUnit.SECONDS);
     }
 
+    //将店铺信息按照typeId存入redis
+    @Test
+    void loadShopData(){
+        System.out.println("开始加载店铺数据");
+        List<Shop> list = shopService.list();
+        list.stream().forEach(shop -> {
+            redisTemplate.opsForGeo().add(RedisConstants.SHOP_GEO_KEY + shop.getTypeId()
+                    , new Point(shop.getX(), shop.getY()), shop.getId().toString());
+        });
+    }
 
 }
