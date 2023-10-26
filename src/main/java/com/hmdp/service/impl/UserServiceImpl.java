@@ -12,6 +12,7 @@ import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
 import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
+import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.SystemConstants;
 import com.hmdp.utils.UserHolder;
@@ -23,6 +24,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -107,6 +110,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String token = request.getHeader("authorization");
         String key = LOGIN_USER_KEY + token;
         stringRedisTemplate.opsForHash().delete(key,userDTOMap.keySet().toArray());
+        return Result.ok();
+    }
+
+    @Override
+    public Result sign() {
+        UserDTO user = UserHolder.getUser();
+        //获取当天日期
+        LocalDateTime now = LocalDateTime.now();
+        String month = now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        String key = USER_SIGN_KEY +user.getId() +  month;
+        //获取今天是这个月的第几天
+        int dayOfMonth = now.getDayOfMonth();
+        stringRedisTemplate.opsForValue().setBit(key, dayOfMonth - 1, true);
+
         return Result.ok();
     }
 
