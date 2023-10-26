@@ -10,7 +10,7 @@ spring:
     password: zyhsdhrdhr123
   redis:
     host: 8.130.46.60
-    port: 6379
+    port: 6380
     password: zyhsdhrdhr123
     lettuce:
       pool:
